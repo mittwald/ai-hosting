@@ -100,13 +100,10 @@ prompt_step() {
   printf '\n%sStep %s:%s %s\n' "${C_BOLD}${C_CYAN}" "$step" "${C_RESET}" "$description"
   printf '\n  %sRun this step? [Y/n]:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
   read -r answer < /dev/tty || true
+  [ -z "${answer:-}" ] && answer='y'
   case "${answer:-}" in
-    n|N|no|NO) return 1 ;;
     y|Y|yes|YES) return 0 ;;
-    *)
-        [ -n "${answer:-}" ] && return 1
-        return 0
-        ;;
+    *) return 1 ;;
   esac
 }
 
@@ -214,14 +211,14 @@ else
     install_failed=0
 
     echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code "git clone https://github.com/mrgoonie/cmai.git ${cmai_src_dir}")${C_RESET}"
-    if ! git clone https://github.com/mrgoonie/cmai.git "${cmai_src_dir}"; then
+    if ! git clone https://github.com/mrgoonie/cmai.git "${cmai_src_dir}" 2>&1 | sed 's/^/    /'; then
       install_failed=1
     fi
 
     if [ "${install_failed}" -eq 0 ]; then
       echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code "cd ${cmai_src_dir}")${C_RESET}"
       echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code "./install.sh")${C_RESET}"
-      if ! (cd "${cmai_src_dir}" && ./install.sh); then
+      if ! (cd "${cmai_src_dir}" && ./install.sh 2>&1) | sed 's/^/    /'; then
         install_failed=1
       fi
     fi
@@ -252,11 +249,15 @@ if [ -n "${MITTWALD_AI_API_KEY:-}" ]; then
   if [ -t 0 ] || [ -t 1 ]; then
     printf '  %sUse key from MITTWALD_AI_API_KEY [Y/n]:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
     read -r use_env_api_key < /dev/tty || true
+    [ -z "${use_env_api_key:-}" ] && use_env_api_key='y'
   else
     printf '  %sUse key from MITTWALD_AI_API_KEY [Y/n]:%s Y\n' "${C_BOLD}${C_BLUE}" "${C_RESET}"
   fi
   case "${use_env_api_key:-}" in
-    n|N|no|NO)
+    y|Y|yes|YES)
+      cmai_api_key="${MITTWALD_AI_API_KEY}"
+      ;;
+    *)
       if [ -t 0 ] || [ -t 1 ]; then
         printf '  %sAPI key (optional):%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
         read -r cmai_api_key < /dev/tty || true
@@ -264,9 +265,6 @@ if [ -n "${MITTWALD_AI_API_KEY:-}" ]; then
         printf '  %sAPI key (optional):%s\n' "${C_BOLD}${C_BLUE}" "${C_RESET}"
         cmai_api_key=''
       fi
-      ;;
-    *)
-      cmai_api_key="${MITTWALD_AI_API_KEY}"
       ;;
   esac
 else
@@ -289,7 +287,7 @@ if prompt_step "3" "Configure $(code "cmai") to use mittwald AI"; then
     echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code 'cmai --use-custom "https://llm.aihosting.mittwald.de/v1" --model "gpt-oss-120b" --print-config')${C_RESET}"
   fi
   cmai_cmd+=(--print-config)
-  if ! "${cmai_cmd[@]}" | sed 's/^/  /'; then
+  if ! "${cmai_cmd[@]}" | sed 's/^/    /'; then
     echo "  ${C_RED}ERROR:${C_RESET} failed to configure $(code "cmai"). Aborting."
     exit 1
   fi
@@ -310,22 +308,12 @@ if [ -n "${existing_template_dir}" ]; then
   if [ -t 0 ] || [ -t 1 ]; then
     printf '  %sUse configured directory [Y/n]:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
     read -r use_configured_template_dir < /dev/tty || true
+    [ -z "${use_configured_template_dir:-}" ] && use_configured_template_dir='y'
   else
     printf '  %sUse configured directory [Y/n]:%s Y\n' "${C_BOLD}${C_BLUE}" "${C_RESET}"
   fi
-  case "${use_configured_template_dir:-}" in
-    n|N|no|NO)
-      if ! prompt_template_dir "${default_template_dir}"; then
-        echo "  ${C_RED}Aborting.${C_RESET}"
-        exit 1
-      fi
-      if [ "${template_dir}" != "${existing_template_dir}" ]; then
-          echo
-          echo "  ${C_YELLOW}${C_BOLD}WARNING:${C_RESET}${C_YELLOW} template directory is not configured globally.${C_RESET}"
-          echo "  ${C_YELLOW}The template will not be found automatically.${C_RESET}"
-      fi
-      ;;
-    *)
+  case "${use_configured_template_dir}" in
+    y|Y|yes|YES)
       resolved_default_template_dir="$(resolve_template_dir "${default_template_dir}")"
       if [ "${resolved_default_template_dir#/}" = "${resolved_default_template_dir}" ]; then
         echo "  ${C_RED}ERROR:${C_RESET} configured template directory must be an absolute path."
@@ -338,6 +326,17 @@ if [ -n "${existing_template_dir}" ]; then
         echo "  ${C_YELLOW}The template will not be found automatically.${C_RESET}"
       else
         template_dir="${resolved_default_template_dir}"
+      fi
+      ;;
+    *)
+      if ! prompt_template_dir "${default_template_dir}"; then
+        echo "  ${C_RED}Aborting.${C_RESET}"
+        exit 1
+      fi
+      if [ "${template_dir}" != "${existing_template_dir}" ]; then
+          echo
+          echo "  ${C_YELLOW}${C_BOLD}WARNING:${C_RESET}${C_YELLOW} template directory is not configured globally.${C_RESET}"
+          echo "  ${C_YELLOW}The template will not be found automatically.${C_RESET}"
       fi
       ;;
   esac
@@ -375,15 +374,16 @@ if [ -f "${HOOK_PATH}" ]; then
   printf '\n%sStep %s:%s %s\n' "${C_BOLD}${C_CYAN}" "5" "${C_RESET}" "Write $(code "${DISPLAY_HOOK_PATH}")"
   echo
   echo "  ${C_YELLOW}${C_BOLD}WARNING:${C_RESET}${C_YELLOW} ${C_CODE}${HOOK_PATH}${C_RESET}${C_YELLOW} already exists.${C_RESET}"
-  printf '\n  %sOverwrite? [y/N]:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
+  printf '\n  %sOverwrite? [Y/n]:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
   read -r overwrite_answer < /dev/tty || true
+  [ -z "${overwrite_answer:-}" ] && overwrite_answer='y'
   case "${overwrite_answer:-}" in
     y|Y|yes|YES)
-    mkdir -p "${HOOK_DIR}"
-    echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} Installing $(code "${HOOK_PATH}")${C_RESET}"
-    printf '%s\n' "${HOOK_CONTENT}" > "${HOOK_PATH}"
-    chmod +x "${HOOK_PATH}"
-    echo "  ${C_GREEN}Done.${C_RESET}"
+      mkdir -p "${HOOK_DIR}"
+      echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} Installing $(code "${HOOK_PATH}")${C_RESET}"
+      printf '%s\n' "${HOOK_CONTENT}" > "${HOOK_PATH}"
+      chmod +x "${HOOK_PATH}"
+      echo "  ${C_GREEN}Done.${C_RESET}"
       ;;
     *)
       echo "  ${C_RED}Aborting.${C_RESET}"
@@ -417,6 +417,8 @@ if is_vim_editor "${editor_value}"; then
   while IFS= read -r line; do
     printf '  %s%s%s%s\n' "${C_ITALIC}" "${C_CODE}" "$line" "${C_RESET}"
   done <<< "${VIM_SNIPPET}"
+  echo
+  echo "  ${C_YELLOW}${C_BOLD}INFO:${C_RESET}${C_YELLOW} This helps prevent accidentally committing a generated message.${C_RESET}"
   if prompt_confirm; then
     vimrc_path="${HOME}/.vimrc"
     if [ ! -f "${vimrc_path}" ]; then
