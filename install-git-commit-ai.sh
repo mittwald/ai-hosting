@@ -93,6 +93,10 @@ code() {
   printf '%s%s%s' "${C_CODE}" "$1" "${C_RESET}"
 }
 
+dim_output() {
+  sed "s/^/    ${C_DIM}/; s/\$/${C_RESET}/"
+}
+
 prompt_step() {
   local step="$1"
   local description="$2"
@@ -211,14 +215,14 @@ else
     install_failed=0
 
     echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code "git clone https://github.com/mrgoonie/cmai.git ${cmai_src_dir}")${C_RESET}"
-    if ! git clone https://github.com/mrgoonie/cmai.git "${cmai_src_dir}" 2>&1 | sed 's/^/    /'; then
+    if ! git clone https://github.com/mrgoonie/cmai.git "${cmai_src_dir}" 2>&1 | dim_output; then
       install_failed=1
     fi
 
     if [ "${install_failed}" -eq 0 ]; then
       echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code "cd ${cmai_src_dir}")${C_RESET}"
       echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code "./install.sh")${C_RESET}"
-      if ! (cd "${cmai_src_dir}" && ./install.sh 2>&1) | sed 's/^/    /'; then
+      if ! (cd "${cmai_src_dir}" && ./install.sh 2>&1) | dim_output; then
         install_failed=1
       fi
     fi
@@ -294,7 +298,7 @@ if prompt_step "3" "Configure $(code "cmai") to use mittwald AI"; then
     echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code "${preview_cmd}")${C_RESET}"
   fi
   cmai_cmd+=(--print-config)
-  if ! "${cmai_cmd[@]}" | sed 's/^/    /'; then
+  if ! "${cmai_cmd[@]}" 2>&1 | dim_output; then
     echo "  ${C_RED}ERROR:${C_RESET} failed to configure $(code "cmai"). Aborting."
     exit 1
   fi
