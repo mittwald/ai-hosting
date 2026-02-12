@@ -281,10 +281,17 @@ if prompt_step "3" "Configure $(code "cmai") to use mittwald AI"; then
   cmai_cmd=(cmai --use-custom "https://llm.aihosting.mittwald.de/v1" --model "gpt-oss-120b")
   if [ -n "${cmai_api_key}" ]; then
     cmai_cmd+=(--api-key "${cmai_api_key}")
-    echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code 'cmai --use-custom "https://llm.aihosting.mittwald.de/v1" --model "gpt-oss-120b" --api-key "<redacted>" --print-config')${C_RESET}"
+    preview_cmd='cmai --use-custom "https://llm.aihosting.mittwald.de/v1"
+         --model      "gpt-oss-120b"
+         --api-key    "<redacted>"
+         --print-config'
+    echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code "${preview_cmd}")${C_RESET}"
   else
     echo "  ${C_YELLOW}No API key set. You can enter the API key later in ${C_CODE}cmai${C_RESET}${C_YELLOW} config.${C_RESET}"
-    echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code 'cmai --use-custom "https://llm.aihosting.mittwald.de/v1" --model "gpt-oss-120b" --print-config')${C_RESET}"
+    preview_cmd='cmai --use-custom "https://llm.aihosting.mittwald.de/v1"
+         --model      "gpt-oss-120b"
+         --print-config'
+    echo "  ${C_ITALIC}${C_BLUE}>${C_RESET}${C_ITALIC} $(code "${preview_cmd}")${C_RESET}"
   fi
   cmai_cmd+=(--print-config)
   if ! "${cmai_cmd[@]}" | sed 's/^/    /'; then
