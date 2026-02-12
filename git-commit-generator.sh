@@ -99,7 +99,7 @@ prompt_step() {
   local answer
   printf '\n%sStep %s:%s %s\n' "${C_BOLD}${C_CYAN}" "$step" "${C_RESET}" "$description"
   printf '\n  %sRun this step? [Y/n]:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
-  read -r answer || true
+  read -r answer < /dev/tty || true
   case "${answer:-}" in
     n|N|no|NO) return 1 ;;
     y|Y|yes|YES) return 0 ;;
@@ -113,7 +113,7 @@ prompt_step() {
 prompt_confirm() {
   local answer
   printf '\n  %sRun this step? [y/N]:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
-  read -r answer || true
+  read -r answer < /dev/tty || true
   case "${answer:-}" in
     y|Y|yes|YES) return 0 ;;
     *) return 1 ;;
@@ -157,7 +157,7 @@ prompt_template_dir() {
   while true; do
     if [ -t 0 ] || [ -t 1 ]; then
       printf '  %sTemplate directory:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
-      read -r -e -i "${initial}" input || true
+      read -r -e -i "${initial}" input < /dev/tty || true
     else
       printf '  %sTemplate directory:%s %s\n' "${C_BOLD}${C_BLUE}" "${C_RESET}" "$(code "${initial}")"
       input="${initial}"
@@ -251,7 +251,7 @@ if [ -n "${MITTWALD_AI_API_KEY:-}" ]; then
   use_env_api_key='y'
   if [ -t 0 ] || [ -t 1 ]; then
     printf '  %sUse key from MITTWALD_AI_API_KEY [Y/n]:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
-    read -r use_env_api_key || true
+    read -r use_env_api_key < /dev/tty || true
   else
     printf '  %sUse key from MITTWALD_AI_API_KEY [Y/n]:%s Y\n' "${C_BOLD}${C_BLUE}" "${C_RESET}"
   fi
@@ -259,7 +259,7 @@ if [ -n "${MITTWALD_AI_API_KEY:-}" ]; then
     n|N|no|NO)
       if [ -t 0 ] || [ -t 1 ]; then
         printf '  %sAPI key (optional):%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
-        read -r cmai_api_key || true
+        read -r cmai_api_key < /dev/tty || true
       else
         printf '  %sAPI key (optional):%s\n' "${C_BOLD}${C_BLUE}" "${C_RESET}"
         cmai_api_key=''
@@ -272,7 +272,7 @@ if [ -n "${MITTWALD_AI_API_KEY:-}" ]; then
 else
   if [ -t 0 ] || [ -t 1 ]; then
     printf '  %sAPI key (optional):%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
-    read -r cmai_api_key || true
+    read -r cmai_api_key < /dev/tty || true
   else
     printf '  %sAPI key (optional):%s\n' "${C_BOLD}${C_BLUE}" "${C_RESET}"
     cmai_api_key=''
@@ -309,7 +309,7 @@ if [ -n "${existing_template_dir}" ]; then
   printf '  %sTemplate directory:%s %s\n' "${C_BOLD}" "${C_RESET}" "$(code "${default_template_dir}")"
   if [ -t 0 ] || [ -t 1 ]; then
     printf '  %sUse configured directory [Y/n]:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
-    read -r use_configured_template_dir || true
+    read -r use_configured_template_dir < /dev/tty || true
   else
     printf '  %sUse configured directory [Y/n]:%s Y\n' "${C_BOLD}${C_BLUE}" "${C_RESET}"
   fi
@@ -376,7 +376,7 @@ if [ -f "${HOOK_PATH}" ]; then
   echo
   echo "  ${C_YELLOW}${C_BOLD}WARNING:${C_RESET}${C_YELLOW} ${C_CODE}${HOOK_PATH}${C_RESET}${C_YELLOW} already exists.${C_RESET}"
   printf '\n  %sOverwrite? [y/N]:%s ' "${C_BOLD}${C_BLUE}" "${C_RESET}"
-  read -r overwrite_answer || true
+  read -r overwrite_answer < /dev/tty || true
   case "${overwrite_answer:-}" in
     y|Y|yes|YES)
     mkdir -p "${HOOK_DIR}"
