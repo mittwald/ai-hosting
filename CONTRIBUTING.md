@@ -13,14 +13,13 @@ There is no hard rule for this, but the following guidelines should be followed.
 
 Features that should (usually) be added:
 
-- Tools that help productivity of developers
+- Tools that help productivity of developers and make use of AI hosted by mittwald
 - Install scripts including setup and configuration
-- Tools that use AI hosted by mittwald
 
 Features that would (usually) not be added:
 
 - Tools which are not able to be used with AI hosted by mittwald
-- Complex CLI tools, that should rather be hosting in a separate repository
+- Complex CLI tools, that should rather be hosted in a separate repository
 
 ## Contributing
 
