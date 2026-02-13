@@ -42,3 +42,15 @@ curl -fsSL https://github.com/mittwald/ai-developer-tools/raw/refs/heads/main/in
 This repository is intended as a collection point for developer productivity tooling around mittwald AI hosting.
 
 Check back later.
+
+## Feedback
+
+Please use this project's [issue tracker](https://github.com/mittwald/ai-developer-tools/issues) to report specific suggestions or issues.
+
+For security-related issues, please refrain from using the public issue tracker or discussion board. Have a look at the [security policy](./SECURITY.md), instead.
+
+Also, please note that the issue tracker is not a support channel for mittwald's hosting products. Please use our regular [support options](https://www.mittwald.de/impressum) to receive product support.
+
+## Contributing
+
+We are happy to accept external contributions to our documentation. See the [Contribution guide](./CONTRIBUTING.md) for more information.
